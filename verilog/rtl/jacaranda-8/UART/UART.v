@@ -32,14 +32,12 @@ module UART(
     input wire [31:0] clk_freq
 );
 
-    parameter BAUD_RATE = 9600;
-    parameter CLK_FREQ  = 250000;
+    parameter BAUD_RATE = 115200;
 
-    //wire [31:0] clk_count_bit;
+    wire [31:0] clk_count_bit;
     reg state;
 
-    //assign clk_count_bit = clk_freq / BAUD_RATE;
-    parameter CLK_COUNT = CLK_FREQ / BAUD_RATE;
+    assign clk_count_bit = clk_freq / BAUD_RATE;
 
     always @(negedge clk) begin
         if(reset) begin
@@ -62,7 +60,7 @@ module UART(
         end
     end
 
-    tx tx1(clk, reset, tx_en, begin_flag, tx_data, tx, busy_flag, CLK_COUNT);
-    rx rx1(clk, reset, rx_en, rx, rx_data, receive_flag, CLK_COUNT);
+    tx tx1(clk, reset, tx_en, begin_flag, tx_data, tx, busy_flag, clk_count_bit);
+    rx rx1(clk, reset, rx_en, rx, rx_data, receive_flag, clk_count_bit);
     
 endmodule
