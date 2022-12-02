@@ -54,9 +54,7 @@ module user_project_wrapper (user_clock2,
  input [3:0] wbs_sel_i;
 
 
- computer computer (.vccd1(vccd1),
-    .vssd1(vssd1),
-    .wb_clk_i(wb_clk_i),
+ computer computer (.wb_clk_i(wb_clk_i),
     .wb_rst_i(wb_rst_i),
     .wbs_ack_o(wbs_ack_o),
     .wbs_cyc_i(wbs_cyc_i),
