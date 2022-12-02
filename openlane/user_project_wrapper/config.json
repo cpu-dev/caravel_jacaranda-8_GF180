@@ -5,7 +5,6 @@
     "CLOCK_PORT": "computer.wb_clk_i",
     "CLOCK_NET": "computer.wb_clk_i",
     "ROUTING_CORES": 16,
-    "FP_PDN_MACRO_HOOKS": "computer vccd1 vssd1 vccd1 vssd1",
     "MACRO_PLACEMENT_CFG": "dir::macro.cfg",
     "VERILOG_FILES_BLACKBOX": ["dir::../../verilog/rtl/defines.v", "dir::../../verilog/rtl/jacaranda-8/computer.v"],
     "EXTRA_LEFS": "dir::../../lef/computer.lef",
