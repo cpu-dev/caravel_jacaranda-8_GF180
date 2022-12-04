@@ -4015,7 +4015,7 @@ MACRO computer
         RECT 438.480 0.000 439.040 4.000 ;
     END
   END la_oenb[9]
-  PIN vccd1
+  PIN vdd
     DIRECTION INOUT ;
     USE POWER ;
     PORT
@@ -4058,8 +4058,8 @@ MACRO computer
       LAYER Metal4 ;
         RECT 1404.640 15.380 1406.240 1482.060 ;
     END
-  END vccd1
-  PIN vssd1
+  END vdd
+  PIN vss
     DIRECTION INOUT ;
     USE GROUND ;
     PORT
@@ -4102,7 +4102,7 @@ MACRO computer
       LAYER Metal4 ;
         RECT 1481.440 15.380 1483.040 1482.060 ;
     END
-  END vssd1
+  END vss
   PIN wb_clk_i
     DIRECTION INPUT ;
     USE SIGNAL ;
