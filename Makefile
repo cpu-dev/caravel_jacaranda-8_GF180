@@ -24,7 +24,7 @@ SIM?=RTL
 CARAVEL_LITE?=1
 
 # PDK switch varient
-export PDK?=sky130A
+export PDK?=gf180mcuC
 #export PDK?=gf180mcuC
 export PDKPATH?=$(PDK_ROOT)/$(PDK)
 
@@ -34,7 +34,7 @@ ifeq ($(PDK),sky130A)
 	SKYWATER_COMMIT=f70d8ca46961ff92719d8870a18a076370b85f6c
 	export OPEN_PDKS_COMMIT?=0059588eebfc704681dc2368bd1d33d96281d10f
 	export OPENLANE_TAG?=2022.11.19
-	MPW_TAG ?= mpw-8c
+	MPW_TAG ?= mpw-8a
 
 ifeq ($(CARAVEL_LITE),1)
 	CARAVEL_NAME := caravel-lite
@@ -52,7 +52,7 @@ ifeq ($(PDK),sky130B)
 	SKYWATER_COMMIT=f70d8ca46961ff92719d8870a18a076370b85f6c
 	export OPEN_PDKS_COMMIT?=0059588eebfc704681dc2368bd1d33d96281d10f
 	export OPENLANE_TAG?=2022.11.19
-	MPW_TAG ?= mpw-8c
+	MPW_TAG ?= mpw-8a
 
 ifeq ($(CARAVEL_LITE),1)
 	CARAVEL_NAME := caravel-lite
@@ -68,13 +68,14 @@ endif
 
 ifeq ($(PDK),gf180mcuC)
 
-	MPW_TAG ?= gfmpw-0b
+	MPW_TAG ?= gfmpw-0d
 	CARAVEL_NAME := caravel
 	CARAVEL_REPO := https://github.com/efabless/caravel-gf180mcu
 	CARAVEL_TAG := $(MPW_TAG)
 	#OPENLANE_TAG=ddfeab57e3e8769ea3d40dda12be0460e09bb6d9
-	export OPEN_PDKS_COMMIT?=0059588eebfc704681dc2368bd1d33d96281d10f
-	export OPENLANE_TAG?=2022.11.19
+	#export OPEN_PDKS_COMMIT?=0059588eebfc704681dc2368bd1d33d96281d10f
+	export OPEN_PDKS_COMMIT?=35c7265f51749ad8d9fdbb575af22c7c8fab974e
+	export OPENLANE_TAG?=2022.11.29
 
 endif
 
@@ -274,6 +275,11 @@ $(TIMING_ROOT):
 setup-timing-scripts: $(TIMING_ROOT)
 	@( cd $(TIMING_ROOT) && git pull )
 	@#( cd $(TIMING_ROOT) && git fetch && git checkout $(MPW_TAG); )
+	@python3 -m venv ./venv 
+		. ./venv/bin/activate && \
+		python3 -m pip install --upgrade pip && \
+		python3 -m pip install -r $(TIMING_ROOT)/requirements.txt && \
+		deactivate
 
 ./verilog/gl/user_project_wrapper.v:
 	$(error you don't have $@)
@@ -286,43 +292,27 @@ setup-timing-scripts: $(TIMING_ROOT)
 
 .PHONY: create-spef-mapping
 create-spef-mapping: ./verilog/gl/user_project_wrapper.v
-	docker run \
-		--rm \
-		-u $$(id -u $$USER):$$(id -g $$USER) \
-		-v $(PDK_ROOT):$(PDK_ROOT) \
-		-v $(CUP_ROOT):$(CUP_ROOT) \
-		-v $(CARAVEL_ROOT):$(CARAVEL_ROOT) \
-		-v $(MCW_ROOT):$(MCW_ROOT) \
-		-v $(TIMING_ROOT):$(TIMING_ROOT) \
-		-w $(shell pwd) \
-		efabless/timing-scripts:latest \
+	@. ./venv/bin/activate && \
 		python3 $(TIMING_ROOT)/scripts/generate_spef_mapping.py \
 			-i ./verilog/gl/user_project_wrapper.v \
 			-o ./env/spef-mapping.tcl \
 			--pdk-path $(PDK_ROOT)/$(PDK) \
 			--macro-parent mprj \
-			--project-root "$(CUP_ROOT)"
+			--project-root "$(CUP_ROOT)" && \
+		deactivate
 
 .PHONY: extract-parasitics
 extract-parasitics: ./verilog/gl/user_project_wrapper.v
-	docker run \
-		--rm \
-		-u $$(id -u $$USER):$$(id -g $$USER) \
-		-v $(PDK_ROOT):$(PDK_ROOT) \
-		-v $(CUP_ROOT):$(CUP_ROOT) \
-		-v $(CARAVEL_ROOT):$(CARAVEL_ROOT) \
-		-v $(MCW_ROOT):$(MCW_ROOT) \
-		-v $(TIMING_ROOT):$(TIMING_ROOT) \
-		-w $(shell pwd) \
-		efabless/timing-scripts:latest \
+	@. ./venv/bin/activate && \
 		python3 $(TIMING_ROOT)/scripts/get_macros.py \
-			-i ./verilog/gl/user_project_wrapper.v \
-			-o ./tmp-macros-list \
-			--project-root "$(CUP_ROOT)" \
-			--pdk-path $(PDK_ROOT)/$(PDK)
-	@cat ./tmp-macros-list | cut -d " " -f2 \
-		| xargs -I % bash -c "$(MAKE) -C $(TIMING_ROOT) \
-			-f $(TIMING_ROOT)/timing.mk rcx-% || echo 'Cannot extract %. Probably no def for this macro'"
+		-i ./verilog/gl/user_project_wrapper.v \
+		-o ./tmp-macros-list \
+		--project-root "$(CUP_ROOT)" \
+		--pdk-path $(PDK_ROOT)/$(PDK) && \
+		deactivate
+		@cat ./tmp-macros-list | cut -d " " -f2 \
+			| xargs -I % bash -c "$(MAKE) -C $(TIMING_ROOT) \
+				-f $(TIMING_ROOT)/timing.mk rcx-% || echo 'Cannot extract %. Probably no def for this macro'"
 	@$(MAKE) -C $(TIMING_ROOT) -f $(TIMING_ROOT)/timing.mk rcx-user_project_wrapper
 	@cat ./tmp-macros-list
 	@rm ./tmp-macros-list
@@ -332,10 +322,4 @@ caravel-sta: ./env/spef-mapping.tcl
 	@$(MAKE) -C $(TIMING_ROOT) -f $(TIMING_ROOT)/timing.mk caravel-timing-typ
 	@$(MAKE) -C $(TIMING_ROOT) -f $(TIMING_ROOT)/timing.mk caravel-timing-fast
 	@$(MAKE) -C $(TIMING_ROOT) -f $(TIMING_ROOT)/timing.mk caravel-timing-slow
-	@echo =================================================Summary=================================================
-	@find $(PROJECT_ROOT)/signoff/caravel/openlane-signoff -name "*-summary.rpt" | head -n1 \
-		| xargs tail -n2 | head -n1
-	@find $(PROJECT_ROOT)/signoff/caravel/openlane-signoff -name "*-summary.rpt" \
-		| xargs -I {} tail -n1 "{}"
-	@echo =========================================================================================================
 	@echo "You can find results for all corners in $(CUP_ROOT)/signoff/caravel/openlane-signoff/timing/"
