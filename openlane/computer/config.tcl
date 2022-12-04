@@ -70,8 +70,8 @@ set ::env(QUIT_ON_HOLD_VIOLATIONS) 0
 
 set ::env(FP_PIN_ORDER_CFG) $::env(DESIGN_DIR)/pin_order.cfg
 
-set ::env(VDD_NETS) [list {vccd1}]
-set ::env(GND_NETS) [list {vssd1}]
+set ::env(VDD_NETS) [list {vdd}]
+set ::env(GND_NETS) [list {vss}]
 
 set ::env(DIODE_INSERTION_STRATEGY) 4
 
