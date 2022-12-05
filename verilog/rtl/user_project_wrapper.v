@@ -31,10 +31,10 @@
 
 module user_project_wrapper #(
     parameter BITS = 32
-) (
+)(
 `ifdef USE_POWER_PINS
-    inout vdd,	// User area 5.0V supply
-    inout vss,	// User area GND
+    inout vdd,		// User area 5.0V supply
+    inout vss,		// User area ground
 `endif
 
     // Wishbone Slave ports (WB MI A)
@@ -50,20 +50,14 @@ module user_project_wrapper #(
     output [31:0] wbs_dat_o,
 
     // Logic Analyzer Signals
-    input  [127:0] la_data_in,
-    output [127:0] la_data_out,
-    input  [127:0] la_oenb,
+    input  [63:0] la_data_in,
+    output [63:0] la_data_out,
+    input  [63:0] la_oenb,
 
     // IOs
     input  [`MPRJ_IO_PADS-1:0] io_in,
     output [`MPRJ_IO_PADS-1:0] io_out,
     output [`MPRJ_IO_PADS-1:0] io_oeb,
-
-    // Analog (direct connection to GPIO pad---use with caution)
-    // Note that analog I/O is not available on the 7 lowest-numbered
-    // GPIO pads, and so the analog_io indexing is offset from the
-    // GPIO indexing by 7 (also upper 2 GPIOs do not have analog_io).
-    inout [`MPRJ_IO_PADS-10:0] analog_io,
 
     // Independent clock (on independent integer divider)
     input   user_clock2,
